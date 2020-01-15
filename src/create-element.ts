@@ -1,6 +1,6 @@
 import { Props, TypeI } from './type'
 
-function createElement(type: TypeI, props: Props, children: any) {
+export function createElement(type: TypeI, props: Props, children: any) {
   let normalizedProps: Props = {},
     i
 
@@ -24,14 +24,22 @@ function createElement(type: TypeI, props: Props, children: any) {
 
   if (typeof type === 'function' && type.defaultProps) {
     for (i in type.defaultProps) {
-      // 应用 defaultProps
       if (normalizedProps[i] === undefined) {
         normalizedProps[i] = type.defaultProps[i]
       }
     }
   }
 
-  return catElement(type, normalizedProps, props && props.key, props && props.ref)
+  return CatElement(type, normalizedProps, props && props.key, props && props.ref)
 }
 
-function catElement(type: TypeI, props: Props, key: string, ref: any) {}
+export function CatElement(type: TypeI, props: Props, key: string, ref: any) {
+  const element = {
+    type,
+    props,
+    key,
+    ref
+  }
+
+  return element
+}
