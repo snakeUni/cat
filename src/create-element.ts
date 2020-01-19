@@ -22,6 +22,7 @@ export function createElement(type: TypeI, props: Props, children: any) {
     normalizedProps.children = children
   }
 
+  // favour defaultProps
   if (typeof type === 'function' && type.defaultProps) {
     for (i in type.defaultProps) {
       if (normalizedProps[i] === undefined) {
