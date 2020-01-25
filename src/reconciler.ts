@@ -1,5 +1,6 @@
 import { createDom } from './create-dom'
-import { RequestIdleCallbackDeadline, CallbackFn, FiberNode } from './type'
+import { isNext, isOnlyPre, isProperty, isEvent, getEventName } from './utils'
+import { RequestIdleCallbackDeadline, CallbackFn, FiberNode, Props } from './type'
 
 let nextUnitOfWork: any = null
 let wipRoot: any = null
@@ -77,6 +78,8 @@ function commitWork(fiber: FiberNode) {
   if (parentDom) {
     if (fiber.effectTag === 'ADD' && fiber.dom !== null) {
       parentDom.appendChild(fiber.dom)
+    } else if (fiber.effectTag === 'UPDATE' && fiber.dom !== null) {
+      updateDom(fiber.dom, fiber.alternate.props, fiber.props)
     } else if (fiber.effectTag === 'DELETE') {
       parentDom.removeChild(fiber.dom)
     }
@@ -144,4 +147,40 @@ function reconcilerChildren(wipFiber: FiberNode, elements: any) {
     presibling = newFiber
     index++
   }
+}
+
+function updateDom(dom: HTMLElement | Text, preProps: Props, nextProps: Props) {
+  // remove old properties
+  Object.keys(preProps)
+    .filter(isProperty)
+    .filter(isOnlyPre(nextProps))
+    .forEach(name => {
+      ;(dom as any)[name] = ''
+    })
+
+  // update or set properties
+  Object.keys(nextProps)
+    .filter(isProperty)
+    .filter(isNext(preProps, nextProps))
+    .forEach(name => {
+      ;(dom as any)[name] = nextProps[name]
+    })
+
+  // update event listeners
+  Object.keys(preProps)
+    .filter(isEvent)
+    .filter(key => isOnlyPre(nextProps)(key) || isNext(preProps, nextProps)(key))
+    .forEach(name => {
+      const eventName = getEventName(name)
+      dom.removeEventListener(eventName, preProps[name])
+    })
+
+  // add event listeners
+  Object.keys(nextProps)
+    .filter(isEvent)
+    .filter(isNext(preProps, nextProps))
+    .forEach(name => {
+      const eventName = getEventName(name)
+      dom.addEventListener(eventName, nextProps[name])
+    })
 }
