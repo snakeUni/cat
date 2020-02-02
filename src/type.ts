@@ -4,9 +4,13 @@ export interface Props {
 
 export type TypeI = Function | string
 
+export interface Hook {
+  state: any
+}
+
 export interface FiberNode {
   // Instance
-  type: string
+  type: any
   tag: string
   key: string | number
 
@@ -27,6 +31,8 @@ export interface FiberNode {
   alternate: FiberNode
 
   effectTag: string
+
+  hooks: Hook[]
 }
 
 /**

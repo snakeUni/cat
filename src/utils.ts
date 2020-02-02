@@ -9,3 +9,5 @@ export const isOnlyPre = (next: Props) => (key: string) => !(key in next)
 export const isEvent = (key: string) => key.startsWith('on')
 
 export const getEventName = (name: string) => name.toLowerCase().substring(2)
+
+export const isFunction = (fn: any) => typeof fn === 'function'

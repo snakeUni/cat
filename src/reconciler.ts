@@ -7,6 +7,8 @@ let wipRoot: any = null
 let currentRoot: any = null
 let deletions: any[] = []
 
+let wipFiber: FiberNode | null = null
+
 export function render(element: FiberNode, container: HTMLElement) {
   wipRoot = {
     dom: container,
@@ -28,6 +30,10 @@ function workLoop(deadline: RequestIdleCallbackDeadline) {
     shouldYield = deadline.timeRemaining() < 1
   }
 
+  if (!nextUnitOfWork && wipRoot) {
+    commitRoot()
+  }
+
   requestIdleCallback(workLoop)
 }
 
@@ -41,12 +47,13 @@ function requestIdleCallback(callback: CallbackFn) {
 }
 
 function performUnitOfWork(fiber: FiberNode) {
-  if (!fiber.dom) {
-    fiber.dom = createDom(fiber)
-  }
+  const isFunctionComponent = fiber.type instanceof Function
 
-  const elements = fiber.props.children
-  reconcilerChildren(fiber, elements)
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber)
+  } else {
+    updateHostComponent(fiber)
+  }
 
   if (fiber.child) {
     return fiber.child
@@ -63,6 +70,37 @@ function performUnitOfWork(fiber: FiberNode) {
   }
 }
 
+function updateHostComponent(fiber: FiberNode) {
+  if (!fiber.dom) {
+    fiber.dom = createDom(fiber)
+  }
+
+  const elements = fiber.props.children
+  reconcilerChildren(fiber, elements)
+}
+
+function updateFunctionComponent(fiber: FiberNode) {
+  wipFiber = fiber
+  wipFiber.hooks = []
+
+  const children = [fiber.type(fiber.props)]
+  reconcilerChildren(fiber, children)
+}
+
+export function getWipFiber() {
+  return wipFiber
+}
+
+export function scheduleWork() {
+  wipRoot = {
+    dom: currentRoot.dom,
+    props: currentRoot.props,
+    alternate: currentRoot
+  }
+  nextUnitOfWork = wipRoot
+  deletions = []
+}
+
 function commitRoot() {
   deletions.forEach(commitWork)
   commitWork(wipRoot.child)
@@ -73,7 +111,14 @@ function commitRoot() {
 function commitWork(fiber: FiberNode) {
   if (!fiber) return
 
-  const parentDom = fiber.return.dom
+  let parent = fiber.return
+
+  //  find the parent of a DOM node we’ll need to go up the fiber tree until we find a fiber with a DOM node.
+  while (!parent.dom) {
+    parent = parent.return
+  }
+
+  const parentDom = parent.dom
 
   if (parentDom) {
     if (fiber.effectTag === 'ADD' && fiber.dom !== null) {
@@ -81,12 +126,21 @@ function commitWork(fiber: FiberNode) {
     } else if (fiber.effectTag === 'UPDATE' && fiber.dom !== null) {
       updateDom(fiber.dom, fiber.alternate.props, fiber.props)
     } else if (fiber.effectTag === 'DELETE') {
-      parentDom.removeChild(fiber.dom)
+      commitDeletion(fiber, parentDom)
     }
   }
 
   commitWork(fiber.sibling)
   commitWork(fiber.child)
+}
+
+// when removing a node we also need to keep going until we find a child with a DOM node
+function commitDeletion(fiber: FiberNode, parentDom: HTMLElement | Text) {
+  if (fiber.dom) {
+    parentDom.removeChild(fiber.dom)
+  } else {
+    commitDeletion(fiber.child, parentDom)
+  }
 }
 
 function reconcilerChildren(wipFiber: FiberNode, elements: any) {
