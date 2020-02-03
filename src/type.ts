@@ -6,6 +6,7 @@ export type TypeI = Function | string
 
 export interface Hook {
   state: any
+  dep?: any[]
 }
 
 export interface FiberNode {
