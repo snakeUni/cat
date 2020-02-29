@@ -44,6 +44,7 @@ type RequestIdleCallbackHandle = any
 type RequestIdleCallbackOptions = {
   timeout: number
 }
+
 export type RequestIdleCallbackDeadline = {
   readonly didTimeout: boolean
   timeRemaining: () => number

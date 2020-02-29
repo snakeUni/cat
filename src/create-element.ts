@@ -22,15 +22,6 @@ export function createElement(type: TypeI, props: Props, children: any) {
     normalizedProps.children = children
   }
 
-  // don't favour defaultProps
-  // if (typeof type === 'function' && type.defaultProps) {
-  //   for (i in type.defaultProps) {
-  //     if (normalizedProps[i] === undefined) {
-  //       normalizedProps[i] = type.defaultProps[i]
-  //     }
-  //   }
-  // }
-
   return CatElement(type, normalizedProps, props && props.key, props && props.ref)
 }
 

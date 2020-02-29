@@ -192,6 +192,7 @@ function reconcilerChildren(wipFiber: FiberNode, elements: any) {
     }
 
     if (index === 0) {
+      // 第一个就是子元素
       wipFiber.child = newFiber
     } else {
       presibling.sibling = newFiber
