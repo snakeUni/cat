@@ -2,9 +2,16 @@
   "name": "@tang/cat",
   "version": "0.0.1",
   "description": "web framework",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "files": [
+    "dist"
+  ],
   "repository": "git@github.com:snakeUni/cat.git",
   "author": "Uni <1025687605@qq.com>",
+  "scripts": {
+    "build": "rollup -c"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged",
@@ -24,6 +31,10 @@
     "husky": "^4.0.7",
     "lint-staged": "^9.5.0",
     "prettier": "^1.19.1",
+    "rollup": "^1.32.0",
+    "rollup-plugin-terser": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.26.0",
+    "terser": "^4.6.4",
     "typescript": "^3.7.4"
   }
 }
